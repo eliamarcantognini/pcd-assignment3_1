@@ -8,7 +8,10 @@ lazy val root = (project in file("."))
   )
 
 val AkkaVersion = "2.6.19"
+val Slf4jVersion = "1.7.36"
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % AkkaVersion % Test
+  "com.typesafe.akka" %% "akka-actor-testkit-typed" % AkkaVersion % Test,
+  "org.slf4j" % "slf4j-api" % Slf4jVersion,
+  "org.slf4j" % "slf4j-simple" % Slf4jVersion
 )
