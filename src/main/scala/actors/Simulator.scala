@@ -1,13 +1,14 @@
 package actors
 
 import actors.Simulator.SimulatorMessages
+import actors.View.ViewMessages
+import actors.View.ViewMessages.DisplayBodies
 import model.{Body, Boundary, P2d, V2d}
 
 import scala.util.Random
 import scala.collection.mutable.ListBuffer
-
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior, scaladsl}
-import scaladsl.{Behaviors, ActorContext}
+import scaladsl.{ActorContext, Behaviors}
 
 
 object Simulator:
@@ -17,9 +18,12 @@ object Simulator:
     case BodyCreated(body: Body)
     case Next
 //    case SimulatorRef(ref: ActorRef[SimulatorMessages])
-    case Start(n: Int, it: Int)
+//    case Start(n: Int, it: Int)
+    case Start(ref: ActorRef[ViewMessages], n: Int, it: Int)
     case Stop
     case Updates(body: Body)
+    case ViewRef(ref: ActorRef[ViewMessages])
+    case ViewCompletedDisplay
 
   export SimulatorMessages.*
 
@@ -33,6 +37,7 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
 
   import Simulator.*
 
+  private var viewRef: Option[ActorRef[ViewMessages]] = None
   //  private var ownSimulatorRef: Option[ActorRef[SimulatorMessages]] = None
   private var bodyList: List[Body] = List()
   private val bodyListBuffer: ListBuffer[Body] = ListBuffer()
@@ -48,8 +53,9 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
   private val waiting: Behavior[SimulatorMessages] =
     this.enteringStateLog("waiting")
     Behaviors.receiveMessagePartial {
-      case Start(nBody, it) =>
-        this.receivedMsgFromStateLog("waiting", Start(nBody, it))
+      case Start(viewRef,nBody, it) =>
+        this.receivedMsgFromStateLog("waiting", Start(viewRef, nBody, it))
+        this.viewRef = Some(viewRef)
         startSimulation(nBody, it)
         Thread.sleep(3000)
         this.waitingBodiesInitialized
@@ -78,6 +84,15 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
 
   //  private lazy val idleCycle: Behavior[SimulatorMessages] = this.started
 
+  private lazy val waitingView: Behavior[SimulatorMessages] =
+    val nameState = "waitingView"
+    this.enteringStateLog(nameState)
+    Behaviors.receiveMessagePartial{
+      case ViewCompletedDisplay => 
+        ctx.self ! Next
+        this.started
+    }
+  
   private lazy val started: Behavior[SimulatorMessages] =
     val nameState = "started"
     this.enteringStateLog(nameState)
@@ -91,7 +106,9 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
         if bodyUpdated >= this.bodyNumberSimulation then
           this.bodyList = this.bodyListBuffer.sortBy(b => b.getId).toList
           //          this.ownSimulatorRef.get ! Next
-          ctx.self ! Next
+          this.viewRef.get ! DisplayBodies(this.bodyList, 0, this.actualSimulationIteration, boundary)
+//          ctx.self ! Next
+          this.waitingView
         Behaviors.same
       case Next =>
         this.actualSimulationIteration = this.actualSimulationIteration + 1
