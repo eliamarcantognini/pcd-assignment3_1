@@ -11,10 +11,11 @@ object Main:
     Behaviors.setup { context =>
       val logInfo: String => Unit = context.log.info
       logInfo("Main started")
+      val withGui = true
       val simulatorName = "Simulator"
       val viewName = "View"
       val simulatorRef = context.spawn(Simulator(simulatorName), simulatorName)
-      val viewRef = context.spawn(View(viewName), viewName)
+      val viewRef = context.spawn(View(viewName, withGui), viewName)
       context.watch(simulatorRef)
       viewRef ! SimulatorRef(simulatorRef)
       //      simulatorRef ! SimulatorRef(simulatorRef)
@@ -22,7 +23,7 @@ object Main:
       Thread.sleep(1000)
       logInfo("Sending start message")
       Thread.sleep(1000)
-      viewRef ! ViewMessages.Start(10,5)
+      viewRef ! ViewMessages.Start(10,5000)
       //      simulatorRef ! Start(10, 2)
       //      Thread.sleep(3000)
       //      logInfo("Re-Sending start message")

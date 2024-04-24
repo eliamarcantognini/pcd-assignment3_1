@@ -6,6 +6,7 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior, scaladsl}
 import model.{Body, Boundary, P2d, V2d}
 import view.PrinterView
+import view.gui.GUIView
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
@@ -26,21 +27,26 @@ object View:
 
   export ViewMessages.*
 
-  def apply(name: String): Behavior[ViewMessages] =
+  def apply(name: String, gui: Boolean): Behavior[ViewMessages] =
     Behaviors.setup { ctx =>
       ctx.log.info("Object Simulator apply, creation simulator in waiting")
       //      new View(name).waiting
-      new View(ctx, name).waiting
+      new View(ctx, name, gui).waiting
     }
 
 //class View private(name: String):
-class View private(ctx: ActorContext[ViewMessages], name: String):
+class View private(ctx: ActorContext[ViewMessages], name: String, gui: Boolean):
   //
 
   import View.*
   import view.*
 
-  private val view = new PrinterView()
+  private val view = if gui then
+    val view = new GUIView(1000,1000)
+    view.addListener(???) // creare ViewListener per farlo funzionare con i messaggi
+    view
+  else
+    new PrinterView()
   private var simulatorRef: Option[ActorRef[SimulatorMessages]] = None
 
   private val waiting: Behavior[ViewMessages] =
