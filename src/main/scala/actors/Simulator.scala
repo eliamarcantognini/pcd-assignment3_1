@@ -86,9 +86,9 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
 
   private lazy val waitingView: Behavior[SimulatorMessages] =
     val nameState = "waitingView"
-    this.enteringStateLog(nameState)
     Behaviors.receiveMessagePartial{
-      case ViewCompletedDisplay => 
+      case ViewCompletedDisplay =>
+        this.enteringStateLog(nameState)
         ctx.self ! Next
         this.started
     }
@@ -109,7 +109,7 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
           this.viewRef.get ! DisplayBodies(this.bodyList, 0, this.actualSimulationIteration, boundary)
 //          ctx.self ! Next
           this.waitingView
-        Behaviors.same
+        else Behaviors.same
       case Next =>
         this.actualSimulationIteration = this.actualSimulationIteration + 1
         if this.actualSimulationIteration > this.simulationIteration then

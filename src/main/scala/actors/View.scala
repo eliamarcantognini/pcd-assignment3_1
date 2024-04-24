@@ -18,7 +18,7 @@ object View:
     //    case BodyCreated(body: Body)
     //    case Next
     ////    case SimulatorRef(ref: ActorRef[SimulatorMessages])
-    case Start
+    case Start(n: Int, it: Int)
     //    case Stop
     //    case Updates(body: Body)
     case SimulatorRef(ref: ActorRef[SimulatorMessages])
@@ -53,8 +53,8 @@ class View private(ctx: ActorContext[ViewMessages], name: String):
         this.simulatorRef = Some(ref)
         //        this.simulatorRef ! ctx.self
         Behaviors.same
-      case Start =>
-        this.simulatorRef.get ! SimulatorMessages.Start(ctx.self, 10, 5)
+      case Start(n, it) =>
+        this.simulatorRef.get ! SimulatorMessages.Start(ctx.self, n, it)
         Behaviors.same
 
     }
