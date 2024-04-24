@@ -2,7 +2,6 @@ import akka.NotUsed
 import akka.actor.typed.{ActorSystem, Behavior, Terminated}
 import akka.actor.typed.scaladsl.Behaviors
 import actors.{Simulator, View}
-import view.SimpleView
 
 object Main:
   import Simulator.*
