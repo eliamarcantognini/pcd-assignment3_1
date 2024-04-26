@@ -1,9 +1,10 @@
 package view;
 
-import controller.ViewListener;
 import model.Body;
 import model.Boundary;
 import model.Commands;
+
+import controller.ViewListener;
 
 import java.util.List;
 import java.util.Timer;
