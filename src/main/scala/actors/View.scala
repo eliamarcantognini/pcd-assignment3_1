@@ -4,7 +4,7 @@ import actors.Simulator.SimulatorMessages
 import actors.View.ViewMessages
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior, scaladsl}
-import model.{Body, Boundary, P2d, V2d}
+import model.{Body, Boundary, Commands, P2d, V2d}
 import view.PrinterView
 import view.gui.GUIView
 
@@ -39,14 +39,18 @@ class View private(ctx: ActorContext[ViewMessages], name: String, gui: Boolean):
   //
 
   import View.*
-  import view.*
 
   private val view = if gui then
     val view = new GUIView(1000,1000)
-    view.addListener(???) // creare ViewListener per farlo funzionare con i messaggi
+    view.addListener(code => {
+      code match
+        case Commands.START => this.simulatorRef.get ! SimulatorMessages.Start(ctx.self, 10, 5000)
+        case Commands.STOP => this.simulatorRef.get ! SimulatorMessages.Stop
+    })
     view
   else
     new PrinterView()
+
   private var simulatorRef: Option[ActorRef[SimulatorMessages]] = None
 
   private val waiting: Behavior[ViewMessages] =

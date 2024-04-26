@@ -57,7 +57,7 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
         this.receivedMsgFromStateLog("waiting", Start(viewRef, nBody, it))
         this.viewRef = Some(viewRef)
         startSimulation(nBody, it)
-        Thread.sleep(3000)
+//        Thread.sleep(3000)
         this.waitingBodiesInitialized
 //      case SimulatorRef(ref) =>
         //        this.ownSimulatorRef = Some(ref)
@@ -91,6 +91,7 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
         this.enteringStateLog(nameState)
         ctx.self ! Next
         this.started
+      case Stop => this.stopped
     }
   
   private lazy val started: Behavior[SimulatorMessages] =
@@ -124,7 +125,7 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
     }
 
   private lazy val stopped: Behavior[SimulatorMessages] =
-    Behaviors.same
+    Behaviors.empty
 
   private def tickBodyActors(): Unit =
     for
