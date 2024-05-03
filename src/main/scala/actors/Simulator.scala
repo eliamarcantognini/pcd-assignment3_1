@@ -17,8 +17,6 @@ object Simulator:
   enum SimulatorMessages:
     case BodyCreated(body: Body)
     case Next
-//    case SimulatorRef(ref: ActorRef[SimulatorMessages])
-//    case Start(n: Int, it: Int)
     case Start(ref: ActorRef[ViewMessages])
     case Stop
     case Updates(body: Body)
@@ -38,14 +36,11 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], nBodies: Int, iter
   import Simulator.*
 
   private var viewRef: Option[ActorRef[ViewMessages]] = None
-  //  private var ownSimulatorRef: Option[ActorRef[SimulatorMessages]] = None
   private var bodyList: List[Body] = List()
   private val bodyListBuffer: ListBuffer[Body] = ListBuffer()
   private val mass = 10
   private val dt = 0.01
   private val boundary: Boundary = Boundary(-6, -6, 6, 6)
-//  private var nBodies: Int = 0
-//  private var iterations: Int = 0
   private var actualSimulationIteration: Int = 0
 
   private val bodyActors: ListBuffer[ActorRef[Tick]] = ListBuffer()
@@ -57,12 +52,7 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], nBodies: Int, iter
         this.receivedMsgFromStateLog("waiting", Start(viewRef))
         this.viewRef = Some(viewRef)
         startSimulation()
-//        Thread.sleep(3000)
         this.waitingBodiesInitialized
-//      case SimulatorRef(ref) =>
-        //        this.ownSimulatorRef = Some(ref)
-//        Behaviors.same
-
     }
 
   private lazy val waitingBodiesInitialized: Behavior[SimulatorMessages] =
@@ -75,14 +65,11 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], nBodies: Int, iter
         if bodyListBuffer.size == this.nBodies then
           bodyList = bodyListBuffer.sortBy(b => b.getId).toList
           this.ctx.log.info("All bodies initialized")
-          //          this.ownSimulatorRef.get ! Next
           ctx.self ! Next
           this.started
         else
           Behaviors.same
     }
-
-  //  private lazy val idleCycle: Behavior[SimulatorMessages] = this.started
 
   private lazy val waitingView: Behavior[SimulatorMessages] =
     val nameState = "waitingView"
@@ -106,9 +93,7 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], nBodies: Int, iter
         bodyUpdated = bodyUpdated + 1
         if bodyUpdated >= this.nBodies then
           this.bodyList = this.bodyListBuffer.sortBy(b => b.getId).toList
-          //          this.ownSimulatorRef.get ! Next
           this.viewRef.get ! DisplayBodies(this.bodyList, 0, this.actualSimulationIteration, boundary)
-//          ctx.self ! Next
           this.waitingView
         else Behaviors.same
       case Next =>

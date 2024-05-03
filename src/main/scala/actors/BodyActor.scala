@@ -18,9 +18,6 @@ class BodyActor(context: ActorContext[Tick], id: Int, mass: Double, pos: P2d, va
 
 
   override def onMessage(msg: Tick): Behavior[Tick] =
-//    this.context.log.info(s"Received msg $msg")
-//    this.context.log.info(s"Received msg ${msg.bodyList.hashCode()}")
-
 
     computeNewPosition(msg.bodyList)
 
