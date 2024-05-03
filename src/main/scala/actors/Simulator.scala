@@ -19,7 +19,7 @@ object Simulator:
     case Next
 //    case SimulatorRef(ref: ActorRef[SimulatorMessages])
 //    case Start(n: Int, it: Int)
-    case Start(ref: ActorRef[ViewMessages], n: Int, it: Int)
+    case Start(ref: ActorRef[ViewMessages])
     case Stop
     case Updates(body: Body)
     case ViewRef(ref: ActorRef[ViewMessages])
@@ -27,13 +27,13 @@ object Simulator:
 
   export SimulatorMessages.*
 
-  def apply(name: String): Behavior[SimulatorMessages] =
+  def apply(nBodies: Int, iterations: Int, name: String): Behavior[SimulatorMessages] =
     Behaviors.setup { ctx =>
       ctx.log.info("Object Simulator apply, creation simulator in waiting")
-      new Simulator(ctx, name).waiting
+      new Simulator(ctx, nBodies, iterations, name).waiting
     }
 
-class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
+class Simulator private(ctx: ActorContext[SimulatorMessages], nBodies: Int, iterations: Int, name: String):
 
   import Simulator.*
 
@@ -44,8 +44,8 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
   private val mass = 10
   private val dt = 0.01
   private val boundary: Boundary = Boundary(-6, -6, 6, 6)
-  private var bodyNumberSimulation: Int = 0
-  private var simulationIteration: Int = 0
+//  private var nBodies: Int = 0
+//  private var iterations: Int = 0
   private var actualSimulationIteration: Int = 0
 
   private val bodyActors: ListBuffer[ActorRef[Tick]] = ListBuffer()
@@ -53,10 +53,10 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
   private val waiting: Behavior[SimulatorMessages] =
     this.enteringStateLog("waiting")
     Behaviors.receiveMessagePartial {
-      case Start(viewRef,nBody, it) =>
-        this.receivedMsgFromStateLog("waiting", Start(viewRef, nBody, it))
+      case Start(viewRef) =>
+        this.receivedMsgFromStateLog("waiting", Start(viewRef))
         this.viewRef = Some(viewRef)
-        startSimulation(nBody, it)
+        startSimulation()
 //        Thread.sleep(3000)
         this.waitingBodiesInitialized
 //      case SimulatorRef(ref) =>
@@ -72,7 +72,7 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
       case BodyCreated(body) =>
         this.receivedMsgFromStateLog(stateName, BodyCreated(body))
         bodyListBuffer.append(body)
-        if bodyListBuffer.size == this.bodyNumberSimulation then
+        if bodyListBuffer.size == this.nBodies then
           bodyList = bodyListBuffer.sortBy(b => b.getId).toList
           this.ctx.log.info("All bodies initialized")
           //          this.ownSimulatorRef.get ! Next
@@ -104,7 +104,7 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
         this.receivedMsgFromStateLog(nameState, Updates(body))
         this.bodyListBuffer.append(body)
         bodyUpdated = bodyUpdated + 1
-        if bodyUpdated >= this.bodyNumberSimulation then
+        if bodyUpdated >= this.nBodies then
           this.bodyList = this.bodyListBuffer.sortBy(b => b.getId).toList
           //          this.ownSimulatorRef.get ! Next
           this.viewRef.get ! DisplayBodies(this.bodyList, 0, this.actualSimulationIteration, boundary)
@@ -113,7 +113,7 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
         else Behaviors.same
       case Next =>
         this.actualSimulationIteration = this.actualSimulationIteration + 1
-        if this.actualSimulationIteration > this.simulationIteration then
+        if this.actualSimulationIteration > this.iterations then
           this.stopped
         else
           this.ctx.log.info(s"Start iteration $actualSimulationIteration")
@@ -134,13 +134,11 @@ class Simulator private(ctx: ActorContext[SimulatorMessages], name: String):
       this.ctx.log.info(s"Telling to actor $i")
       i.tell(Tick(this.bodyList, ctx.self))
 
-  private def startSimulation(n: Int, it: Int): Unit =
-    this.bodyNumberSimulation = n
-    this.simulationIteration = it
-    ctx.log.info(s"Simulation started with $n body for $it iterations")
+  private def startSimulation(): Unit =
+    ctx.log.info(s"Simulation started with $nBodies body for $iterations iterations")
     val rand = new Random(System.currentTimeMillis)
     for
-      i <- 0 until n
+      i <- 0 until nBodies
       x = boundary.getX0 * 0.25 + rand.nextDouble * (boundary.getX1 - boundary.getX0) * 0.25
       y = boundary.getY0 * 0.25 + rand.nextDouble * (boundary.getY1 - boundary.getY0) * 0.25
       pos = P2d(x, y)

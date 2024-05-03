@@ -19,7 +19,7 @@ object View:
     //    case BodyCreated(body: Body)
     //    case Next
     ////    case SimulatorRef(ref: ActorRef[SimulatorMessages])
-    case Start(n: Int, it: Int)
+    case Start()
     //    case Stop
     //    case Updates(body: Body)
     case SimulatorRef(ref: ActorRef[SimulatorMessages])
@@ -44,7 +44,7 @@ class View private(ctx: ActorContext[ViewMessages], name: String, gui: Boolean):
     val view = new GUIView(1000,1000)
     view.addListener(code => {
       code match
-        case Commands.START => this.simulatorRef.get ! SimulatorMessages.Start(ctx.self, 10, 5000)
+        case Commands.START => this.simulatorRef.get ! SimulatorMessages.Start(ctx.self)
         case Commands.STOP => this.simulatorRef.get ! SimulatorMessages.Stop
     })
     view
@@ -63,8 +63,8 @@ class View private(ctx: ActorContext[ViewMessages], name: String, gui: Boolean):
         this.simulatorRef = Some(ref)
         //        this.simulatorRef ! ctx.self
         Behaviors.same
-      case Start(n, it) =>
-        this.simulatorRef.get ! SimulatorMessages.Start(ctx.self, n, it)
+      case Start() =>
+        this.simulatorRef.get ! SimulatorMessages.Start(ctx.self)
         Behaviors.same
 
     }

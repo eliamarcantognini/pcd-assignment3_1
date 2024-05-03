@@ -14,7 +14,9 @@ object Main:
       val withGui = true
       val simulatorName = "Simulator"
       val viewName = "View"
-      val simulatorRef = context.spawn(Simulator(simulatorName), simulatorName)
+      val nBodies = 100
+      val iterations = 1000
+      val simulatorRef = context.spawn(Simulator(nBodies, iterations, simulatorName), simulatorName)
       val viewRef = context.spawn(View(viewName, withGui), viewName)
       context.watch(simulatorRef)
       viewRef ! SimulatorRef(simulatorRef)
