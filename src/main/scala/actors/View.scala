@@ -16,6 +16,7 @@ object View:
 
   enum ViewMessages:
     case Start()
+    case Stop()
     case SimulatorRef(ref: ActorRef[SimulatorMessages])
     case DisplayBodies(bodies: List[Body], virtualTime: Double, iteration: Long, boundary: Boundary)
 
@@ -31,7 +32,7 @@ class View private(ctx: ActorContext[ViewMessages], name: String, gui: Boolean):
 
   import View.*
 
-  private val view = if gui then new GUIView(1000,1000) else new PrinterView()
+  private val view = if gui then new GUIViewActor(1000,1000,ctx.self) else new PrinterViewActor(ctx.self)
 //    val view = new GUIView(1000,1000)
 //    view.addListener{
 //        case Commands.START => this.simulatorRef.get ! SimulatorMessages.Start(ctx.self)
@@ -61,14 +62,17 @@ class View private(ctx: ActorContext[ViewMessages], name: String, gui: Boolean):
         Behaviors.same
       case SimulatorRef(ref) =>
         this.simulatorRef = Some(ref)
-        view.addListener {
-          case Commands.START => this.simulatorRef.get ! SimulatorMessages.Start(ctx.self)
-          case Commands.STOP => this.simulatorRef.get ! SimulatorMessages.Stop
-        }
+//        view.addListener {
+//          case Commands.START => this.simulatorRef.get ! SimulatorMessages.Start(ctx.self)
+//          case Commands.STOP => this.simulatorRef.get ! SimulatorMessages.Stop
+//        }
         Behaviors.same
-//      case Start() =>
-//        this.simulatorRef.get ! SimulatorMessages.Start(ctx.self)
-//        Behaviors.same
+      case Start() =>
+        this.simulatorRef.get ! SimulatorMessages.Start(ctx.self)
+        Behaviors.same
+      case Stop() =>
+        this.simulatorRef.get ! SimulatorMessages.Stop
+        Behaviors.same
     }
 
 //  private val simulating: Behavior[ViewMessages] =
