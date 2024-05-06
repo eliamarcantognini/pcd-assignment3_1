@@ -12,10 +12,9 @@ final case class Tick(bodyList: List[Body], replyTo: ActorRef[Updates])
 class BodyActor(context: ActorContext[Tick], id: Int, mass: Double, pos: P2d, val dt: Double, val boundary: Boundary, parentRef: ActorRef[SimulatorMessages]) extends AbstractBehavior(context):
 
   val body: Body =
-    val v = Body(id, pos, V2d(0, 0), mass)
-    parentRef ! SimulatorMessages.BodyCreated(v)
-    v
-
+    val b = Body(id, pos, V2d(0, 0), mass)
+    parentRef ! SimulatorMessages.BodyCreated(b)
+    b
 
   override def onMessage(msg: Tick): Behavior[Tick] =
 
@@ -24,7 +23,6 @@ class BodyActor(context: ActorContext[Tick], id: Int, mass: Double, pos: P2d, va
     msg.replyTo ! Updates(body)
 
     this
-
 
   private def computeNewPosition(bodyList: List[Body]): Unit =
     /* compute total force on bodies */
