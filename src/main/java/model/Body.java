@@ -135,7 +135,8 @@ public class Body {
         } else if (x < bounds.getX0()) {
             pos.change(bounds.getX0(), pos.getY());
             vel.change(-vel.getX(), vel.getY());
-        } else if (y > bounds.getY1()) {
+        }
+        if (y > bounds.getY1()) {
             pos.change(pos.getX(), bounds.getY1());
             vel.change(vel.getX(), -vel.getY());
         } else if (y < bounds.getY0()) {
