@@ -1,24 +1,29 @@
 package actors
 
-import actors.Simulator.Update
+import actors.Simulator.{BodyCreated, SimulatorMessages, Updates}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, LoggerOps}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import model.{Body, Boundary, P2d, V2d}
 
-final case class Tick(bodyList: List[Body], replyTo: ActorRef[Update])
 
-class BodyActor(context: ActorContext[Tick], id: Int, mass: Double, pos: P2d, val dt: Double, val boundary: Boundary) extends AbstractBehavior(context):
+final case class Tick(bodyList: List[Body], replyTo: ActorRef[Updates])
 
-  val body: Body = Body(id, pos, V2d(0,0), mass)
+
+class BodyActor(context: ActorContext[Tick], id: Int, mass: Double, pos: P2d, val dt: Double, val boundary: Boundary, parentRef: ActorRef[SimulatorMessages]) extends AbstractBehavior(context):
+
+  val body: Body =
+    val b = Body(id, pos, V2d(0, 0), mass)
+    parentRef ! SimulatorMessages.BodyCreated(b)
+    b
 
   override def onMessage(msg: Tick): Behavior[Tick] =
 
     computeNewPosition(msg.bodyList)
 
-    msg.replyTo ! Update(body)
+    msg.replyTo ! Updates(body)
 
     this
-  
+
   private def computeNewPosition(bodyList: List[Body]): Unit =
     /* compute total force on bodies */
     val totalForce = computeTotalForceOnBody(bodyList)
