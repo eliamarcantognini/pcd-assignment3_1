@@ -32,7 +32,7 @@ class View private(ctx: ActorContext[ViewMessages], name: String, gui: Boolean):
 
   import View.*
 
-  private val view = if gui then new GUIViewActor(1000,1000,ctx.self) else new PrinterViewActor(ctx.self)
+  private val view = if gui then GUIViewActor(1000,1000,ctx.self) else PrinterViewActor(ctx.self)
 
   private var simulatorRef: Option[ActorRef[SimulatorMessages]] = None
 
