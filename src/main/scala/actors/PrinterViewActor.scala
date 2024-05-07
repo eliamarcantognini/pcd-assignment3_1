@@ -5,8 +5,11 @@ import akka.actor.typed.ActorRef
 import model.Commands
 import view.PrinterView
 import view.gui.GUIView
+object PrinterViewActor:
+  def apply(actorRef: ActorRef[ViewMessages]): PrinterViewActor =
+    new PrinterViewActor(actorRef)
 
-class PrinterViewActor(actorRef: ActorRef[ViewMessages]) extends PrinterView(){
+class PrinterViewActor private(actorRef: ActorRef[ViewMessages]) extends PrinterView(){
 
   this.addListener {
     case Commands.START =>
